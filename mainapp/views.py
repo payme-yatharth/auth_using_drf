@@ -8,6 +8,8 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from knox.views import LoginView as KnoxLoginView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
+from rest_framework.views import APIView
+from rest_framework.authentication import TokenAuthentication
 
 # Register API
 class RegisterAPI(generics.GenericAPIView):
@@ -19,7 +21,7 @@ class RegisterAPI(generics.GenericAPIView):
         user = serializer.save()
         return Response({
         "user": UserSerializer(user, context=self.get_serializer_context()).data,
-            "token": AuthToken.objects.create(user)[1]
+            "token": AuthToken.objects.create(user=user)[1]
         })
 
 class LoginAPI(KnoxLoginView):
@@ -40,6 +42,7 @@ class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
     model = User
     permission_classes = (IsAuthenticated,)
+    authentication_classes = [TokenAuthentication]
 
     def get_object(self, queryset=None):
         obj = self.request.user
