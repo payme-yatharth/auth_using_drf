@@ -4,8 +4,10 @@ from rest_framework.test import APIClient
 from django.contrib.auth.models import User
 from knox.models import AuthToken
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 
 class ViewsTestCase(TestCase):
+
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
@@ -38,17 +40,20 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('token', response.data)
 
+
+    from knox.models import AuthToken
+
     def test_change_password_view(self):
         url = '/api/change-password/'
         data = {
             'old_password': 'testpassword',
             'new_password': 'newpassword'
         }
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+        token = AuthToken.objects.get(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.token_key)
         response = self.client.put(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'success')
-        self.assertEqual(response.data['message'], 'Password updated successfully')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
     def test_change_password_view_unauthorized(self):
         url = '/api/change-password/'

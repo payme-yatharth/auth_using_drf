@@ -10,6 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
+from django.contrib.auth.tokens import default_token_generator
+import requests
 
 # Register API
 class RegisterAPI(generics.GenericAPIView):
@@ -35,6 +37,9 @@ class LoginAPI(KnoxLoginView):
         return super(LoginAPI, self).post(request, format=None)
 
 
+import requests
+
+
 class ChangePasswordView(generics.UpdateAPIView):
     """
     An endpoint for changing password.
@@ -42,7 +47,6 @@ class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = ChangePasswordSerializer
     model = User
     permission_classes = (IsAuthenticated,)
-    authentication_classes = [TokenAuthentication]
 
     def get_object(self, queryset=None):
         obj = self.request.user
@@ -56,15 +60,31 @@ class ChangePasswordView(generics.UpdateAPIView):
             # Check old password
             if not self.object.check_password(serializer.data.get("old_password")):
                 return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-            # set_password also hashes the password that the user will get
+
+            # Set new password
             self.object.set_password(serializer.data.get("new_password"))
             self.object.save()
+
+            # Make the request to another API endpoint
+            url = 'http://example.com/api/another-endpoint/'  # Replace with the actual API endpoint URL
+            token = 'your_token_value'
+            data = {
+                "field1": "value1",
+                "field2": "value2",
+                "token": token
+            }
+            response = requests.put(url, json=data)
+
+            response_data = response.json()
+            # Process the response as needed
+
             response = {
                 'status': 'success',
                 'code': status.HTTP_200_OK,
                 'message': 'Password updated successfully',
-                'data': []
+                'data': response_data
             }
 
             return Response(response)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
