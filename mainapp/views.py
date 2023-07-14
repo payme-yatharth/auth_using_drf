@@ -37,9 +37,6 @@ class LoginAPI(KnoxLoginView):
         return super(LoginAPI, self).post(request, format=None)
 
 
-import requests
-
-
 class ChangePasswordView(generics.UpdateAPIView):
     """
     An endpoint for changing password.
